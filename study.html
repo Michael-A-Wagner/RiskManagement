@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Risk Management Study Site</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#ffffff; --text:#1a1d23; --sub:#6b7280;
+  --accent:#2f5d8a; --border:#e2e4e9; --good:#2f8a52; --bad:#c0392b; --badbg:#fbe9e7; --goodbg:#e8f5ec;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171c; --card:#1e2128; --text:#eceef2; --sub:#9ba1ab;
+    --accent:#6fa3d8; --border:#2c3038; --good:#5fbf82; --bad:#e06a5a; --badbg:#3a2320; --goodbg:#1f3327;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171c; --card:#1e2128; --text:#eceef2; --sub:#9ba1ab;
+  --accent:#6fa3d8; --border:#2c3038; --good:#5fbf82; --bad:#e06a5a; --badbg:#3a2320; --goodbg:#1f3327;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  min-height:100%; display:flex; flex-direction:column; align-items:center;
+  padding:20px 16px 40px;
+}
+h1{font-size:1.2rem; margin:4px 0 2px; text-align:center;}
+.sub{color:var(--sub); font-size:.82rem; margin-bottom:16px; text-align:center;}
+.tabs{display:flex; gap:8px; margin-bottom:16px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:4px; width:100%; max-width:560px;}
+.tabs button{flex:1; padding:9px; border:none; border-radius:8px; background:transparent; color:var(--sub); font-size:.88rem; cursor:pointer;}
+.tabs button.active{background:var(--accent); color:#fff;}
+.panel{width:100%; max-width:560px; display:none;}
+.panel.active{display:flex; flex-direction:column; align-items:center;}
+
+.bar{display:flex; gap:10px; align-items:center; margin-bottom:14px; width:100%;}
+.bar select{flex:1; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:.85rem;}
+.progress-wrap{width:100%; height:6px; background:var(--border); border-radius:3px; margin-bottom:18px; overflow:hidden;}
+.progress-fill{height:100%; background:var(--accent); width:0%; transition:width .2s;}
+.counter{color:var(--sub); font-size:.8rem; margin-bottom:10px;}
+.card{
+  width:100%; min-height:260px; background:var(--card); border:1px solid var(--border);
+  border-radius:16px; padding:26px 22px; display:flex; flex-direction:column;
+  justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,.08);
+}
+.tag{font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:var(--accent); margin-bottom:10px; font-weight:600;}
+.tag.back{color:var(--good);}
+.q-text{font-size:1.02rem; line-height:1.5;}
+.a-text{font-size:.98rem; line-height:1.5; font-weight:600; color:var(--good); margin-bottom:8px;}
+.exp-text{font-size:.88rem; line-height:1.5; color:var(--sub);}
+.hint{text-align:center; color:var(--sub); font-size:.72rem; margin-top:8px;}
+.controls{display:flex; gap:10px; width:100%; margin-top:16px;}
+.controls button{flex:1; padding:11px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:.88rem; cursor:pointer;}
+.controls button.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+.controls button:disabled{opacity:.45; cursor:default;}
+.marks{display:flex; gap:10px; width:100%; margin-top:10px;}
+.marks button{flex:1; padding:9px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:.82rem; cursor:pointer;}
+.marks button.know{color:var(--good); border-color:var(--good);}
+.marks button.review{color:var(--bad); border-color:var(--bad);}
+.reset{margin-top:18px; background:none; border:none; color:var(--sub); font-size:.72rem; text-decoration:underline; cursor:pointer;}
+
+.opt-wrap{margin-top:9px;}
+.opt{
+  display:block; width:100%; text-align:left; padding:12px 14px;
+  border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text);
+  font-size:.92rem; cursor:pointer;
+}
+.opt.correct{background:var(--goodbg); border-color:var(--good); color:var(--good); font-weight:600;}
+.opt.wrong{background:var(--badbg); border-color:var(--bad); color:var(--bad); font-weight:600;}
+.opt[disabled]{cursor:default;}
+.opt-why{font-size:.82rem; line-height:1.45; color:var(--sub); padding:6px 4px 2px 4px; display:none;}
+.opt-why.show{display:block;}
+.opt-why.why-correct{color:var(--good);}
+.opt-why.why-wrong{color:var(--bad);}
+.score-box{width:100%; text-align:center; padding:30px 20px;}
+.score-num{font-size:2.4rem; font-weight:700; color:var(--accent); margin-bottom:6px;}
+.score-actions{display:flex; flex-direction:column; gap:10px; margin-top:20px;}
+.score-actions button{padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:.9rem; cursor:pointer;}
+.score-actions button.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+</style>
+</head>
+<body>
+<h1>Risk Management Study Site</h1>
+<div class="sub">50 questions &middot; practice quiz + flashcards</div>
+
+<div class="tabs">
+  <button id="tabQuizBtn" class="active">Practice Quiz</button>
+  <button id="tabCardsBtn">Flashcards</button>
+</div>
+
+<div class="panel active" id="panelQuiz">
+  <div class="progress-wrap"><div class="progress-fill" id="qzProgressFill"></div></div>
+  <div class="counter" id="qzCounter"></div>
+  <div class="card" id="qzCard"></div>
+  <div class="controls">
+    <button id="qzPrevBtn">Prev</button>
+    <button id="qzShuffleBtn">Restart shuffled</button>
+    <button class="primary" id="qzNextBtn" disabled>Next</button>
+  </div>
+</div>
+
+<div class="panel" id="panelCards">
+  <div class="bar"><select id="filterSel"></select></div>
+  <div class="progress-wrap"><div class="progress-fill" id="fcProgressFill"></div></div>
+  <div class="counter" id="fcCounter"></div>
+  <div class="card" id="fcCard"></div>
+  <div class="hint">Tap card to flip</div>
+  <div class="marks">
+    <button class="review" id="markReview">Still learning</button>
+    <button class="know" id="markKnow">I know this</button>
+  </div>
+  <div class="controls">
+    <button id="fcPrevBtn">Prev</button>
+    <button id="fcShuffleBtn">Shuffle</button>
+    <button class="primary" id="fcNextBtn">Next</button>
+  </div>
+</div>
+
+<button class="reset" id="resetBtn">Reset all progress</button>
+
+<script>
+// [question, [4 options], correctIndex, [why0, why1, why2, why3]]
+const DATA = [
+["Which statement best reflects the broader course definition of risk?",["Risk is always a threat that produces a financial loss.","Risk is uncertainty and its potential effects on objectives.","Risk exists only when probabilities are completely unknown.","Risk refers only to physical hazards and accidents."],1,
+["Wrong: risk includes upside too (speculative risk) \u2014 it isn't only a threat or a loss.","Correct: the study guide defines risk as uncertainty and its potential effect on objectives, which cuts both ways.","Wrong: risk can involve estimated or known probabilities; it isn't defined by total uncertainty about probability.","Wrong: physical hazards are just one of the four quadrants (hazard risk), not the whole definition."]],
+["A fire that may cause a loss or no loss, but cannot produce a gain, is an example of what type of risk?",["Speculative risk","Pure risk","Strategic risk","Systemic risk"],1,
+["Wrong: speculative risk includes a chance of gain (e.g. buying stock); fire can't produce a gain.","Correct: pure risk is loss-or-no-loss only \u2014 the guide gives fire as its example.","Wrong: strategic risk is about big-picture trends affecting direction, not the loss/gain outcome range.","Wrong: systemic (non-diversifiable) risk is about scope \u2014 hitting a whole market \u2014 not the loss/gain distinction."]],
+["True or false: Risk management is intended to eliminate every risk faced by an organization.",["True","False"],1,
+["Wrong: the guide explicitly says the goal is never to eliminate every risk.","Correct: retention and exploitation are legitimate strategies \u2014 RM is about managing risk within tolerable limits, not eliminating it."]],
+["Which risk quadrant generally concerns the effects of market forces on financial assets or liabilities?",["Hazard risk","Operational risk","Financial risk","Strategic risk"],2,
+["Wrong: hazard risk covers property, liability, and personnel loss (fire, injury, hurricane).","Wrong: operational risk covers people, processes, systems, and controls (driver error, equipment failure).","Correct: financial risk is market forces hitting assets/liabilities \u2014 FX, interest rates, fuel prices.","Wrong: strategic risk covers big-picture trends like competition or shifting customer tastes."]],
+["A company estimates a 25% annual probability of a cyberattack causing a $6 million loss. What is the expected loss?",["$1.5 million","$6 million","$0.25 million","$24 million"],0,
+["Correct: Expected Loss = Probability \u00d7 Loss Amount = 0.25 \u00d7 $6M = $1.5M.","Wrong: this is just the raw loss amount, not weighted by probability.","Wrong: this restates the probability as if it were dollars \u2014 it skips the multiplication.","Wrong: this comes from dividing the loss by the probability, not multiplying."]],
+["What does variance measure?",["The probability-weighted average outcome only","The duration of an uncertain event","The probability-weighted squared deviations from the expected value","The maximum possible loss from an event"],2,
+["Wrong: that describes expected value (EV), not variance.","Wrong: variance is a statistical dispersion measure, not a measure of time.","Correct: variance is the sum of squared deviations from EV, weighted by probability \u2014 per the guide's formula.","Wrong: that's closer to a worst-case or VaR-style concept, not variance."]],
+["True or false: Expected value alone fully captures every dimension of risk.",["True","False"],1,
+["Wrong: the guide's two-bet example (identical EV, wildly different variance) directly disproves this.","Correct: EV tells you the center of the distribution; variance tells you how wild the swings are \u2014 you need both."]],
+["What is the primary difference between traditional risk management and ERM?",["Traditional uses numbers, ERM uses only qualitative ratings.","Traditional focuses on departmental risks; ERM considers how risks fit together across the organization.","Traditional manages opportunities, ERM manages only threats.","Traditional is proactive; ERM is exclusively reactive."],1,
+["Wrong: the guide doesn't distinguish the two by quantitative vs. qualitative methods.","Correct: traditional RM asks \u2018how does my department handle this risk,\u2019 while ERM asks how all risks interact across the whole org.","Wrong: risk in general (in either framework) includes both threats and opportunities per the guide's definition.","Wrong: the RM cycle (Identify\u2192Analyze\u2192Treat\u2192Monitor) is proactive in both traditional and enterprise approaches."]],
+["Which statement best describes value-at-risk (VaR)?",["It measures the average profit from all possible outcomes.","It identifies an unusually bad outcome or downside cutoff over a specified context.","It is the same thing as standard deviation in every situation.","It measures only operational safety hazards."],1,
+["Wrong: that describes expected value, not VaR.","Correct: VaR is the cutoff for the \u2018unusually bad\u2019 left-tail outcomes, per the guide's table.","Wrong: VaR is a specific tail cutoff, not the same measure as overall standard deviation.","Wrong: VaR applies broadly across financial and other risk types, not just operational safety."]],
+["An organization lists risks from all four quadrants, then filters by safety, core business, and material effects. What principle is this?",["Think broadly first, then filter and prioritize.","Focus narrowly on financial risks only.","Assign every risk to a single department.","Ignore any risk with low probability."],0,
+["Correct: this is the guide's broad-then-narrow approach \u2014 cast a wide net, filter for relevance, then prioritize.","Wrong: the guide explicitly says to search across all four quadrants, not just financial risk.","Wrong: this contradicts ERM's cross-department, whole-organization view.","Wrong: filtering is based on relevance (safety, core business, material effects), not simply dropping low-probability risks."]],
+["Which technique obtains anonymous expert forecasts through repeated rounds until responses converge?",["SWOT analysis","Delphi technique","Process flow analysis","Job safety analysis"],1,
+["Wrong: SWOT is a broad internal/external strategic assessment, with no anonymity or repeated rounds.","Correct: Delphi uses anonymous experts and repeated rounds to reach convergence, per the guide's technique table.","Wrong: process flow analysis traces a process forward from input to output, unrelated to expert consensus.","Wrong: JSA maps job steps to hazards; it doesn't involve expert forecasting rounds."]],
+["A company wants to trace inputs, activities, and outputs to find delays or inefficiencies. Which technique fits?",["Process flow analysis","Fault tree analysis","Delphi analysis","Risk transfer analysis"],0,
+["Correct: process flow analysis follows a process forward from input through activities to output, per the guide.","Wrong: fault tree analysis works backward from a failure to its causes, not forward through a process.","Wrong: Delphi is about anonymous expert consensus, not tracing a workflow.","Wrong: this isn't a listed identification technique in the guide \u2014 risk transfer is a treatment strategy, not an identification tool."]],
+["True or false: A risk map's numeric ratings (e.g. 1-5) give exact probability ratios.",["True","False"],1,
+["Wrong: the guide's \u2018quant vs. qual trap\u2019 section warns against this exact assumption.","Correct: risk-map numbers are usually relative rankings, not actual probabilities or dollar figures \u2014 a \u20183\u2019 isn't automatically 3x a \u20181.\u2019"]],
+["What belongs in a risk register?",["Only the name of each risk","Risk description, likelihood, impact, category, owner, and actions or status","Only risks that have already caused losses","Only quantitative probability distributions"],1,
+["Wrong: too minimal \u2014 the guide describes a fuller set of fields.","Correct: matches the guide's description of a risk register as an organized to-do list with these fields.","Wrong: a register is forward-looking \u2014 it tracks risks that haven't yet caused a loss too.","Wrong: registers commonly use qualitative categories (likelihood/impact ratings), not only quantitative distributions."]],
+["In domino theory, what's identified as the target for intervention?",["Ancestry and social environment","Fault of person","An unsafe act and/or mechanical or physical hazard","The resulting injury"],2,
+["Wrong: this is the first domino, further upstream than the actual intervention point.","Wrong: this is the second domino, still upstream of the target.","Correct: the guide states the unsafe act/condition is the natural intervention point in the domino sequence.","Wrong: injury is the final outcome \u2014 too late for intervention."]],
+["Speed limiters and airbags \u2014 how does energy transfer theory explain these controls?",["They reduce or modify the harmful release and impact of kinetic energy.","They eliminate the need for driver training.","They transfer liability to insurance providers.","They increase impact speed to shorten exposure time."],0,
+["Correct: energy transfer theory says controls interrupt the energy chain \u2014 reducing energy or cushioning contact, per the guide.","Wrong: energy transfer theory is about controlling physical energy, not training programs.","Wrong: shifting liability is risk transfer/insurance, a separate concept from energy transfer theory.","Wrong: this is the opposite of what these controls do \u2014 they reduce, not increase, harmful impact."]],
+["Which statement best reflects the Technique of Operations Review (TOR)?",["Accidents are caused exclusively by careless individuals.","Unsafe acts, conditions, and accidents can be symptoms of problems in the management system.","Only physical equipment failures should be investigated.","Safety should be separated from normal organizational management."],1,
+["Wrong: this directly contradicts TOR's systemic view of accidents.","Correct: TOR treats unsafe acts/conditions/accidents as potential symptoms of a management-system problem, per the guide.","Wrong: TOR isn't limited to equipment \u2014 it examines management goals, training, accountability, and more.","Wrong: the guide states TOR's principle that safety should be managed like any other business function, not separated out."]],
+["A JSA breaks a task into steps. What sequence should each step follow?",["Step, probability, variance, expected value","Step, hazard, control, responsibility","Cause, accident, injury, liability","Source, ownership, transfer, retention"],1,
+["Wrong: mixes statistical terms (probability, variance, EV) into a framework that doesn't use them this way.","Correct: JSA's sequence is Step \u2192 Hazard \u2192 Control \u2192 Responsibility, per the guide.","Wrong: this resembles a generic incident chain, not the JSA framework.","Wrong: this is risk-treatment vocabulary (transfer/retention), unrelated to JSA's step sequence."]],
+["Which is the strongest root cause for a machine accident?",["Operator error","Equipment failure","The operator removed the machine guard because procedures and supervision permitted the unsafe condition","The accident happened"],2,
+["Wrong: the guide lists \u2018operator error\u2019 as a weak, too-vague root cause.","Wrong: the guide also lists \u2018equipment failure\u2019 as a weak, too-vague root cause.","Correct: specific and modifiable \u2014 this matches the guide's own example of a strong root cause.","Wrong: this just restates that the event occurred; it isn't a cause at all."]],
+["What is the correct order of the four basic root cause analysis steps?",["Collect data; chart causal factors; identify root causes; implement recommendations.","Identify root causes; collect data; implement recommendations; chart causal factors.","Determine recommendations; collect data; chart causal factors; identify root causes.","Chart causal factors; implement recommendations; collect data; identify root causes."],0,
+["Correct: matches the guide's RCA sequence exactly \u2014 data first, recommendations last.","Wrong: you can't identify root causes before collecting the underlying data.","Wrong: recommendations can't be determined before causes are even identified.","Wrong: this skips straight to charting before any data has been collected."]],
+["Probability of error 0.0001; 10% chance undetected; undetected error causes $1,000 impact. Expected impact per transaction?",["$0.0001","$0.01","$0.10","$100"],1,
+["Wrong: this is just the base error probability alone, not the full compound calculation.","Correct: 0.0001 \u00d7 0.10 \u00d7 $1,000 = $0.01, matching the guide's worked transaction-error example.","Wrong: this results from skipping the 10%-undetected step in the calculation.","Wrong: this is the raw dollar impact, not weighted by either probability."]],
+["True or false: Event tree analysis works backward from a failure to identify its causes.",["True","False"],1,
+["Wrong: that describes fault tree analysis, not event tree analysis.","Correct: per the guide, event tree analysis works forward from an initiating event to its consequences; fault tree works backward."]],
+["Which of the following is one of the five standard risk treatment strategies?",["Exploit","Ignore","Litigate","Delegate"],0,
+["Correct: the guide's five strategies are avoid, modify, transfer, retain, and exploit (leaning into an upside risk).","Wrong: \u2018ignore\u2019 isn't a deliberate strategy listed in the guide.","Wrong: \u2018litigate\u2019 isn't one of the guide's five treatment strategies.","Wrong: \u2018delegate\u2019 isn't one of the guide's five treatment strategies."]],
+["What is the correct order of the risk management process?",["Identify \u2192 Analyze \u2192 Treat/Manage \u2192 Monitor and improve","Analyze \u2192 Identify \u2192 Monitor \u2192 Treat","Treat \u2192 Identify \u2192 Analyze \u2192 Monitor","Monitor \u2192 Treat \u2192 Analyze \u2192 Identify"],0,
+["Correct: matches the guide's stated cycle exactly.","Wrong: you can't analyze a risk before it's been identified.","Wrong: treatment can't happen before identification and analysis.","Wrong: monitoring is the last step in the cycle, not the first."]],
+["A fear of flying, despite statistically safe travel, is best classified as:",["Subjective risk","Objective risk","Diversifiable risk","Non-diversifiable risk"],0,
+["Correct: subjective risk is based on personal perception \u2014 the guide gives fear of flying as its example.","Wrong: objective risk is measurable, data-based variation, the opposite of a perception-driven fear.","Wrong: diversifiable is about spreading exposures, unrelated to personal fear.","Wrong: non-diversifiable is about market-wide/systemic scope, unrelated to personal perception."]],
+["A market-wide crash hitting nearly every company at once is best described as:",["Diversifiable risk","Non-diversifiable (systemic) risk","Pure risk only","Subjective risk"],1,
+["Wrong: diversifiable risk can be spread across exposures \u2014 the opposite of an event hitting everyone at once.","Correct: non-diversifiable/systemic risk hits a whole market or system simultaneously, per the guide.","Wrong: pure vs. speculative is about outcome range (loss vs. loss/gain), not about who's affected.","Wrong: subjective risk is about individual perception, not a market-wide event."]],
+["A company sets a $10,000 deductible on a given exposure. What does this threshold mean?",["Losses under $10,000 are absorbed by the business; losses above it shift to the insurer","All losses regardless of size are covered by insurance","The company will not experience any losses under $10,000","$10,000 is the maximum the business could ever lose"],0,
+["Correct: matches the guide's exact deductible example \u2014 below the threshold is self-absorbed, above it becomes the insurer's problem.","Wrong: a deductible means losses under the amount are specifically NOT covered by insurance.","Wrong: the threshold doesn't prevent losses from happening, just determines who absorbs them.","Wrong: losses above the deductible are still transferred/covered \u2014 it isn't an absolute cap on total loss."]],
+["A risk map rates a hurricane's likelihood as '3' and impact as '3.' Is this quantitative or qualitative data?",["Quantitative, because there are numbers","Qualitative, unless those numbers represent actual probabilities or dollar figures","Neither \u2014 risk maps don't use numbers","Quantitative only if likelihood is above 2"],1,
+["Wrong: this is exactly the trap the guide warns about \u2014 numbers alone don't make data quantitative.","Correct: it's qualitative unless the numbers are actual probabilities or dollar figures, per the guide's explicit warning.","Wrong: risk maps commonly do use numbers, just not necessarily quantitative ones.","Wrong: the threshold isn't about how high the number is, but what it actually represents."]],
+["What is the correct order of the risk analysis chain?",["Source \u2192 Likelihood \u2192 Consequences \u2192 Treatment","Treatment \u2192 Source \u2192 Consequences \u2192 Likelihood","Consequences \u2192 Source \u2192 Treatment \u2192 Likelihood","Likelihood \u2192 Treatment \u2192 Source \u2192 Consequences"],0,
+["Correct: matches the guide's fixed chain exactly.","Wrong: treatment is the last step, not the first \u2014 you can't treat before understanding the source.","Wrong: consequences can't be assessed before the source and likelihood are established.","Wrong: likelihood follows the source in the guide's chain, not the reverse."]],
+["A company spends $50,000 to prevent a risk that would only cost $5,000 if it occurred. This is:",["Good risk management, since any prevention is worthwhile","Wasteful, since the cost of managing the risk outweighs the benefit","Required by regulation regardless of cost","An example of risk transfer"],1,
+["Wrong: this directly contradicts the guide's warning against spending more than a risk is worth.","Correct: per Value of RM = Benefits \u2212 Costs, spending $50k to prevent a $5k risk destroys value rather than creating it.","Wrong: the guide frames this as a business cost-benefit decision, not a regulatory requirement.","Wrong: the example illustrates cost-benefit of prevention/modification, not specifically risk transfer."]],
+["What is the primary role of a Chief Risk Officer (CRO) under an ERM approach?",["Personally managing every risk in the organization","Ensuring the whole risk picture is considered and that every risk has an owner","Only handling insurance purchases","Approving marketing budgets"],1,
+["Wrong: the guide explicitly says the CRO doesn't personally manage every risk.","Correct: the CRO's job is making sure the whole picture is considered and every risk has an owner somewhere in the org.","Wrong: this is far too narrow a description of the CRO's actual ERM role.","Wrong: unrelated to the CRO's described function in the guide."]],
+["In the ERM hurricane chain (damage \u2192 production halts \u2192 delivery delays \u2192 customers leave \u2192 revenue drops), where would a siloed view typically stop?",["At revenue drops","At customers leaving","At the initial property damage","At delivery delays"],2,
+["Wrong: this is the end of the full ERM chain, not where a siloed view would stop.","Wrong: still further downstream than where a siloed view actually stops.","Correct: the guide says a siloed view might stop at \u2018we had property damage\u2019 \u2014 ERM traces the whole chain further.","Wrong: a siloed view stops even earlier than delivery delays, right at the initial damage."]],
+["Earnings-at-Risk (EaR) is best described as:",["The same concept as VaR, applied specifically to earnings","A measure used only for property damage","A synonym for expected value","A qualitative-only rating with no numeric basis"],0,
+["Correct: per the guide's table, EaR applies the same VaR idea specifically to earnings.","Wrong: EaR is about earnings broadly, not limited to property damage.","Wrong: EaR is a downside-focused measure, not the same as the average outcome (EV).","Wrong: the guide presents EaR as a numeric measure, paired with VaR, not purely qualitative."]],
+["Bet A: 50% chance of +$1, 50% chance of \u2212$1. Bet B: 50% chance of +$500, 50% chance of \u2212$500. What's true about these two bets?",["They have the same expected value but very different variances","They have different expected values but the same variance","They are identical in every respect","Bet B has a lower expected value than Bet A"],0,
+["Correct: both have EV = 0 per the guide's example, but Bet B's variance (250,000) is far higher than Bet A's (1).","Wrong: both bets actually have the identical expected value of $0.","Wrong: this contradicts the entire point of the example \u2014 they're identical in EV but very different in risk.","Wrong: both bets have the same EV (0); Bet B isn't lower."]],
+["A hurricane has a 10% annual probability and an estimated $20 million loss if it occurs. What is the expected loss?",["$2 million","$20 million","$200,000","$0.5 million"],0,
+["Correct: 0.10 \u00d7 $20M = $2M, matching the guide's worked example exactly.","Wrong: this is just the raw loss amount, not multiplied by probability.","Wrong: this misplaces a decimal in the calculation.","Wrong: this isn't the result of 0.10 \u00d7 $20M."]],
+["What is the correct order of the energy transfer chain in Haddon's theory?",["Energy generated \u2192 accumulated \u2192 released \u2192 contact \u2192 damage","Damage \u2192 contact \u2192 released \u2192 accumulated \u2192 generated","Contact \u2192 generated \u2192 damage \u2192 released \u2192 accumulated","Accumulated \u2192 damage \u2192 generated \u2192 contact \u2192 released"],0,
+["Correct: matches the guide's fixed chain exactly.","Wrong: this reverses the entire chain \u2014 damage is the last step, not the first.","Wrong: contact happens after energy is generated and released, not before.","Wrong: this scrambles the guide's stated order out of sequence."]],
+["What is the full five-step domino theory sequence?",["Ancestry/social environment \u2192 fault of person \u2192 unsafe act or hazard \u2192 accident \u2192 injury","Unsafe act \u2192 accident \u2192 injury \u2192 fault of person \u2192 ancestry","Injury \u2192 accident \u2192 unsafe act \u2192 fault of person \u2192 ancestry","Fault of person \u2192 accident \u2192 unsafe act \u2192 injury \u2192 ancestry"],0,
+["Correct: matches the guide's linear domino sequence exactly.","Wrong: this places later dominoes before earlier ones in the chain.","Wrong: this reverses the entire sequence, ending where it should begin.","Wrong: this scrambles the guide's stated order out of sequence."]],
+["Which of the following is NOT one of TOR's five underlying principles?",["Unsafe acts/conditions may signal a systemic issue","Safety should be managed like any other business function","Management must define accountability","Only the individual worker bears responsibility for safety outcomes"],3,
+["Wrong (this IS a TOR principle): the guide lists this as one of TOR's five stated principles.","Wrong (this IS a TOR principle): the guide lists this as one of TOR's five stated principles.","Wrong (this IS a TOR principle): the guide lists this as one of TOR's five stated principles.","Correct: this contradicts TOR's actual point \u2014 safety failures reflect systemic/management issues, not solely individual responsibility."]],
+["A company is about to introduce a new AI-based routing system. Which technique surfaces the new risks this change could create?",["Change analysis","JSA","SWOT","Audit"],0,
+["Correct: per the guide's table, change analysis is specifically built to surface risks created by a proposed change.","Wrong: JSA analyzes hazards in existing job steps, not risks from a new, not-yet-implemented change.","Wrong: SWOT is a broad strategic assessment, not change-specific.","Wrong: audit examines current operations/controls, not a proposed future change."]],
+["In a JSA for 'lift box,' which sequence matches Step \u2192 Hazard \u2192 Control \u2192 Responsibility?",["Lift box \u2192 Back injury \u2192 Lift assist \u2192 Warehouse supervisor","Lift box \u2192 Warehouse supervisor \u2192 Back injury \u2192 Lift assist","Back injury \u2192 Lift box \u2192 Lift assist \u2192 Warehouse supervisor","Lift assist \u2192 Back injury \u2192 Lift box \u2192 Warehouse supervisor"],0,
+["Correct: matches the guide's own worked JSA example exactly.","Wrong: this places responsibility before the hazard and control are even identified.","Wrong: this puts the hazard after the control, out of the correct sequence.","Wrong: this puts the control before the step and hazard it's meant to address."]],
+["What are the three basic categories of cause used in root cause analysis?",["Physical, human, organizational","Financial, legal, operational","Internal, external, systemic","Primary, secondary, tertiary"],0,
+["Correct: the guide states real accidents usually involve more than one of these three categories.","Wrong: not the categories the guide uses for RCA.","Wrong: not the categories the guide uses for RCA.","Wrong: not the categories the guide uses for RCA \u2014 these are generic priority labels, not RCA's framework."]],
+["Why does RCA deliberately look past 'who messed up'?",["Because it isn't about assigning blame \u2014 it looks at systemic conditions that let the event happen","Because individuals are never at fault","Because RCA only applies to equipment, never people","Because blame is legally prohibited in all investigations"],0,
+["Correct: the guide states RCA deliberately looks past blame to physical, human, and organizational causes together.","Wrong: the guide doesn't claim individuals are never at fault, just that RCA looks beyond blame to systemic causes.","Wrong: RCA explicitly includes human causes as one of its three categories, not just equipment.","Wrong: this isn't a stated legal rule in the guide."]],
+["The 2018 Uber self-driving accident in Tempe, AZ illustrates:",["That one accident often has multiple root causes across multiple categories","That self-driving cars are always safer than human drivers","That RCA only applies to human error","That fault tree analysis cannot be used on technology failures"],0,
+["Correct: the guide uses this case to show causes spanning people, technology, organization, and external factors at once.","Wrong: the guide doesn't use this case to make a general safety claim about self-driving cars.","Wrong: the case shows RCA covers technology and organizational causes too, not just human error.","Wrong: the guide doesn't suggest fault tree analysis is inapplicable to technology failures."]],
+["P(oversleep)=0.10, P(delayed shuttle)=0.30, independent events. P(oversleep AND delayed shuttle)?",["0.03","0.30","0.40","0.70"],0,
+["Correct: for independent events, multiply the probabilities \u2014 0.10 \u00d7 0.30 = 0.03, matching the guide's worked example.","Wrong: this is just P(delayed shuttle) alone, not the joint probability.","Wrong: this isn't the product of the two probabilities.","Wrong: this is 1 \u2212 P(delayed shuttle), unrelated to the joint probability being asked for."]],
+["Which risk identification technique is best suited to finding risks disclosed in reports and contracts?",["Document analysis","Checklist","Data analytics","Audit"],0,
+["Correct: per the guide's technique table, document analysis shines at finding risks disclosed in reports/contracts.","Wrong: checklist is for making sure already-known risks aren't overlooked, not for reading disclosures.","Wrong: data analytics is for spotting patterns in data, not for reading written disclosures.","Wrong: audit examines current operations/controls, not written disclosures specifically."]],
+["Which technique is primarily used to make sure already-known risks aren't accidentally overlooked?",["Checklist","Scenario analysis","HAZOP","Facilitated workshop"],0,
+["Correct: per the guide's table, a checklist ensures known risks aren't overlooked.","Wrong: scenario analysis traces cascading consequences of one specific event, not a coverage check.","Wrong: HAZOP is a deep review of one complex system, not a broad coverage check.","Wrong: a facilitated workshop gathers diverse perspectives via discussion, not a systematic checklist review."]],
+["Which technique is best suited to spotting patterns in the frequency, impact, or interaction of risks across large datasets?",["Data analytics","Document analysis","Audit","SWOT"],0,
+["Correct: per the guide's table, data analytics shines at spotting patterns in frequency/impact/interactions.","Wrong: document analysis is about reading reports/contracts, not spotting data patterns.","Wrong: audit examines current operations/controls, not data patterns specifically.","Wrong: SWOT is a broad strategic framework, not a data-pattern detection tool."]],
+["Which technique traces the cascading consequences of one specific event?",["Scenario analysis","Checklist","Document analysis","Facilitated workshop"],0,
+["Correct: per the guide's table, scenario analysis follows the cascading consequences of one specific event.","Wrong: checklist verifies known risks aren't missed, not cascading consequences of an event.","Wrong: document analysis is about disclosed risks in documents, not event cascades.","Wrong: facilitated workshop is about group discussion, not tracing one event's downstream effects."]],
+["How does HAZOP differ from SWOT as an identification technique?",["HAZOP is a deep, narrow review of one complex system, while SWOT is a broad internal/external strategic assessment","HAZOP and SWOT are identical techniques with different names","SWOT is used only for financial risk, HAZOP only for strategic risk","HAZOP is broader than SWOT"],0,
+["Correct: the guide explicitly makes this distinction \u2014 HAZOP is deep and narrow, SWOT is broad.","Wrong: the guide explicitly distinguishes the two \u2014 they aren't the same technique.","Wrong: the guide doesn't limit either technique to a single risk quadrant like this.","Wrong: this reverses the actual relationship \u2014 HAZOP is narrower, not broader, than SWOT."]],
+["Public companies must disclose material risk factors in 10-Ks. What's a key limitation of using 10-Ks for risk identification?",["They aren't exhaustive and financial figures may lag current conditions","They only cover strategic risk, never hazard or operational risk","They are updated in real time, so they're always current","They are not accessible to the public"],0,
+["Correct: the guide states 10-Ks aren't exhaustive and financials may lag current conditions.","Wrong: the guide says 10-Ks span all four risk quadrants, not just strategic risk.","Wrong: the guide notes financials may lag, meaning they are NOT always current.","Wrong: 10-Ks are public filings and are accessible to anyone."]]
+];
+
+let marks = {};
+function loadProgress(){ try{ const r=localStorage.getItem('rm-study-marks'); if(r) marks=JSON.parse(r);}catch(e){marks={};} }
+function saveProgress(){ try{ localStorage.setItem('rm-study-marks', JSON.stringify(marks)); }catch(e){} }
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+
+const tabQuizBtn=document.getElementById('tabQuizBtn'), tabCardsBtn=document.getElementById('tabCardsBtn');
+const panelQuiz=document.getElementById('panelQuiz'), panelCards=document.getElementById('panelCards');
+tabQuizBtn.addEventListener('click', ()=>{ tabQuizBtn.classList.add('active'); tabCardsBtn.classList.remove('active'); panelQuiz.classList.add('active'); panelCards.classList.remove('active'); });
+tabCardsBtn.addEventListener('click', ()=>{ tabCardsBtn.classList.add('active'); tabQuizBtn.classList.remove('active'); panelCards.classList.add('active'); panelQuiz.classList.remove('active'); });
+
+/* ---------- QUIZ MODE ---------- */
+let qzOrder = DATA.map((_,i)=>i);
+let qzIdx = 0, qzAnswered = false, qzScore = 0;
+let qzMissed = [];
+let qzMode = 'all'; // 'all' or 'missed'
+
+function qzFinish(){
+  const pct = Math.round(100*qzScore/qzOrder.length);
+  let html = '<div class="score-box"><div class="score-num">'+qzScore+' / '+qzOrder.length+'</div><div class="sub">'+pct+'% correct</div>';
+  html += '<div class="score-actions">';
+  if(qzMissed.length>0){
+    html += '<button class="primary" id="retakeMissedBtn">Retake '+qzMissed.length+' missed question'+(qzMissed.length===1?'':'s')+'</button>';
+  }
+  html += '<button id="retakeAllBtn">Retake full test (shuffled)</button>';
+  html += '</div></div>';
+  document.getElementById('qzCard').innerHTML = html;
+  document.getElementById('qzCounter').textContent = 'Finished';
+  document.getElementById('qzProgressFill').style.width = '100%';
+  document.getElementById('qzPrevBtn').disabled = true;
+  document.getElementById('qzNextBtn').disabled = true;
+  document.getElementById('qzNextBtn').textContent = 'Next';
+  const rmBtn = document.getElementById('retakeMissedBtn');
+  if(rmBtn) rmBtn.addEventListener('click', ()=>{
+    qzOrder = qzMissed.slice();
+    qzMode = 'missed';
+    qzIdx = 0; qzScore = 0; qzMissed = [];
+    document.getElementById('qzPrevBtn').disabled = false;
+    qzRender();
+  });
+  document.getElementById('retakeAllBtn').addEventListener('click', ()=>{
+    qzOrder = shuffle(DATA.map((_,i)=>i));
+    qzMode = 'all';
+    qzIdx = 0; qzScore = 0; qzMissed = [];
+    document.getElementById('qzPrevBtn').disabled = false;
+    qzRender();
+  });
+}
+
+function qzRender(){
+  if(qzIdx >= qzOrder.length){ qzFinish(); return; }
+  document.getElementById('qzPrevBtn').disabled = (qzIdx===0);
+  const dataIdx = qzOrder[qzIdx];
+  const [q, opts, correct, why] = DATA[dataIdx];
+  qzAnswered = false;
+  const modeLabel = qzMode==='missed' ? 'Missed-questions review' : 'Question';
+  let html = '<div class="tag">'+modeLabel+' '+(qzIdx+1)+' of '+qzOrder.length+'</div><div class="q-text">'+q+'</div>';
+  opts.forEach((o,i)=>{
+    html += '<div class="opt-wrap"><button class="opt" data-i="'+i+'">'+o+'</button><div class="opt-why" id="why'+i+'"></div></div>';
+  });
+  document.getElementById('qzCard').innerHTML = html;
+  document.getElementById('qzCounter').textContent = (qzIdx+1)+' / '+qzOrder.length+'  \u00b7  score '+qzScore;
+  document.getElementById('qzProgressFill').style.width = Math.round(100*qzIdx/qzOrder.length)+'%';
+  const nextBtn = document.getElementById('qzNextBtn');
+  nextBtn.disabled = true;
+  nextBtn.textContent = (qzIdx===qzOrder.length-1) ? 'Finish' : 'Next';
+  document.querySelectorAll('#qzCard .opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(qzAnswered) return;
+      qzAnswered = true;
+      const chosen = parseInt(btn.getAttribute('data-i'));
+      document.querySelectorAll('#qzCard .opt').forEach(b=>{
+        const i = parseInt(b.getAttribute('data-i'));
+        b.disabled = true;
+        if(i===correct) b.classList.add('correct');
+        else if(i===chosen) b.classList.add('wrong');
+        const whyEl = document.getElementById('why'+i);
+        whyEl.textContent = why[i];
+        whyEl.classList.add('show');
+        whyEl.classList.add(i===correct ? 'why-correct' : 'why-wrong');
+      });
+      if(chosen===correct){ qzScore++; }
+      else { qzMissed.push(dataIdx); }
+      document.getElementById('qzCounter').textContent = (qzIdx+1)+' / '+qzOrder.length+'  \u00b7  score '+qzScore;
+      nextBtn.disabled = false;
+    });
+  });
+}
+function qzNext(){ if(!qzAnswered) return; qzIdx++; qzRender(); }
+function qzPrev(){ if(qzIdx>0){ qzIdx--; qzRender(); } }
+document.getElementById('qzNextBtn').addEventListener('click', qzNext);
+document.getElementById('qzPrevBtn').addEventListener('click', qzPrev);
+document.getElementById('qzShuffleBtn').addEventListener('click', ()=>{
+  qzOrder = shuffle(DATA.map((_,i)=>i)); qzMode='all'; qzIdx=0; qzScore=0; qzMissed=[];
+  document.getElementById('qzPrevBtn').disabled = false;
+  qzRender();
+});
+
+/* ---------- FLASHCARD MODE ---------- */
+let fcIdx = 0, fcFlipped = false;
+function fcFilteredOrder(){
+  const f = document.getElementById('filterSel').value;
+  if(f==='all') return DATA.map((_,i)=>i);
+  return DATA.map((_,i)=>i).filter(i => marks[i]===f);
+}
+function fcRender(){
+  const list = fcFilteredOrder();
+  if(list.length===0){
+    document.getElementById('fcCard').innerHTML = '<div class="q-text">No cards in this set yet.</div>';
+    document.getElementById('fcCounter').textContent = '';
+    document.getElementById('fcProgressFill').style.width='0%';
+    return;
+  }
+  if(fcIdx>=list.length) fcIdx=0;
+  if(fcIdx<0) fcIdx=list.length-1;
+  const dataIdx = list[fcIdx];
+  const [q, opts, correct, why] = DATA[dataIdx];
+  const card = document.getElementById('fcCard');
+  if(!fcFlipped){
+    card.innerHTML = '<div class="tag">Question</div><div class="q-text">'+q+'</div>';
+  } else {
+    card.innerHTML = '<div class="tag back">Answer</div><div class="a-text">'+opts[correct]+'</div><div class="exp-text">'+why[correct]+'</div>';
+  }
+  document.getElementById('fcCounter').textContent = (fcIdx+1)+' / '+list.length;
+  const known = Object.values(marks).filter(v=>v==='know').length;
+  document.getElementById('fcProgressFill').style.width = Math.round(100*known/DATA.length)+'%';
+}
+function fcFlip(){ fcFlipped=!fcFlipped; fcRender(); }
+function fcNext(){ fcFlipped=false; fcIdx++; fcRender(); }
+function fcPrev(){ fcFlipped=false; fcIdx--; fcRender(); }
+function fcMark(type){
+  const list = fcFilteredOrder();
+  const dataIdx = list[fcIdx];
+  marks[dataIdx] = type;
+  saveProgress();
+  fcNext();
+}
+function setupFilter(){
+  const sel = document.getElementById('filterSel');
+  sel.innerHTML = '<option value="all">All 50 cards</option><option value="review">Still learning</option><option value="know">I know these</option>';
+  sel.addEventListener('change', ()=>{ fcIdx=0; fcFlipped=false; fcRender(); });
+}
+document.getElementById('fcCard').addEventListener('click', fcFlip);
+document.getElementById('fcNextBtn').addEventListener('click', fcNext);
+document.getElementById('fcPrevBtn').addEventListener('click', fcPrev);
+document.getElementById('fcShuffleBtn').addEventListener('click', ()=>{ fcIdx=0; fcFlipped=false; fcRender(); });
+document.getElementById('markKnow').addEventListener('click', ()=>fcMark('know'));
+document.getElementById('markReview').addEventListener('click', ()=>fcMark('review'));
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  marks={}; saveProgress();
+  qzOrder = DATA.map((_,i)=>i); qzMode='all'; qzIdx=0; qzScore=0; qzMissed=[];
+  fcIdx=0; fcFlipped=false;
+  document.getElementById('qzPrevBtn').disabled = true;
+  qzRender(); fcRender();
+});
+
+loadProgress();
+setupFilter();
+qzRender();
+fcRender();
+</script>
+</body>
+</html>
